@@ -21,42 +21,43 @@ namespace TrajectoryCalculation
         /// new tabs/panels will automatically be created.
         /// </summary>
         public TrajectoryCalculationComponent()
-          : base(
-                "PathPoints", 
-                "PathPoints",
-                "Calculates the Path Points of the trajectory",
-                "TrajectoryCalculation", 
-                "Subcategory")
+          : base("PathPoints",
+                 "PathPoints",
+                 "Calculates the Path Points of the trajectory",
+                 "TrajectoryCalculation",
+                 "PathPoints")
         {
         }
-
-        /// <summary>
-        /// Registers all the input parameters for this component.
-        /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
+            pManager.AddPointParameter("Anchor points", "AnchorPts", "The anchor points", GH_ParamAccess.list);
         }
-
-        /// <summary>
-        /// Registers all the output parameters for this component.
-        /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
+            pManager.AddPointParameter("PathPoints", "PathPoints", "Path Points of winding structure", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Distances", "Distances", "Distances", GH_ParamAccess.list);
         }
-
-        /// <summary>
-        /// This is the method that actually does the work.
-        /// </summary>
-        /// <param name="DA">The DA object can be used to retrieve data from input parameters and 
-        /// to store data in output parameters.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-        }
+            List<Point3d> iPoints = new List<Point3d>();
+            DA.GetDataList(0, iPoints);
 
-        /// <summary>
-        /// Provides an Icon for every component that will be visible in the User Interface.
-        /// Icons need to be 24x24 pixels.
-        /// </summary>
+            Point3d centroid = new Point3d(0.0, 0.0, 0.0);
+
+            foreach (Point3d point in iPoints)
+                centroid += point;
+
+            centroid /= iPoints.Count;
+
+            DA.SetData(0, centroid);
+
+            List<double> distances = new List<double>();
+
+            foreach (Point3d point in iPoints)
+                distances.Add(centroid.DistanceTo(point));
+
+            DA.SetDataList(1, distances);
+        }
         protected override System.Drawing.Bitmap Icon
         {
             get

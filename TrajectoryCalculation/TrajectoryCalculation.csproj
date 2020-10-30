@@ -56,6 +56,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="WeiteresComponent.cs" />
     <Compile Include="TrajectoryCalculationComponent.cs" />
     <Compile Include="TrajectoryCalculationInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -69,7 +70,7 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>Copy "$(TargetPath)" "$(TargetDir)$(ProjectName).gha"
+    <PostBuildEvent>Copy "$(TargetPath)" "C:\Users\Air\AppData\Roaming\Grasshopper\Libraries\TrajectoryCalculation.gha"
 Erase "$(TargetPath)"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
