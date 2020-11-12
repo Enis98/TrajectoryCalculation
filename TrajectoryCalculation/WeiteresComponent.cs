@@ -25,7 +25,7 @@ namespace TrajectoryCalculation
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
 
-            pManager.AddBrepParameter("AnchorGeometry", "AnchorGeometry", "3D Geometry of the Anchors", GH_ParamAccess.item);
+            pManager.AddBrepParameter("AnchorGeometry", "AnchorGeometry", "3D Geometry of the Anchors", GH_ParamAccess.list);
         }
         protected override void SolveInstance(IGH_DataAccess DA)
         {
@@ -36,8 +36,9 @@ namespace TrajectoryCalculation
             DA.GetDataList(1, anchorvecs);
 
             AnchorGeometry all = new AnchorGeometry(anchorpts[1], anchorvecs[1], 20, 20, 20, 20);
+            List<Brep> displayGeometry = all.ComputeAnchorGeometry();
 
-            DA.SetData(0, all);
+            DA.SetDataList(0, displayGeometry);
         }
         protected override System.Drawing.Bitmap Icon
         {
