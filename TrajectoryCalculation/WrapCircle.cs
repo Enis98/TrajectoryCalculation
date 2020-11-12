@@ -8,6 +8,6 @@ namespace TrajectoryCalculation
 {
     class WrapCircle
     {
-
+        
     }
 }

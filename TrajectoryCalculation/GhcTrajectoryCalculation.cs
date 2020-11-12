@@ -94,7 +94,7 @@ namespace TrajectoryCalculation
             DA.SetDataList(3, time);
 
             DA.SetData(4, fiberlength);
-            // set output params
+            // set output parameter
         }
         protected override System.Drawing.Bitmap Icon
         {
