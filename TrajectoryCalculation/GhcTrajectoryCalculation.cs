@@ -9,8 +9,8 @@ namespace TrajectoryCalculation
     public class GhcTrajectoryCalculation : GH_Component
     {
         public GhcTrajectoryCalculation()
-          : base("TrajectoryCalc",
-                 "TrajectoryCalc",
+          : base("GhcTrajectoryCalculation",
+                 "GhcTrajCalc",
                  "calculates the trajectory",
                  "CorelessWinding",
                  "Trajectory")

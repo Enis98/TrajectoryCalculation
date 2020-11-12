@@ -59,7 +59,7 @@
     <Compile Include="AnchorGeometry.cs" />
     <Compile Include="GhcTrajectoryCalculation.cs" />
     <Compile Include="WrapCircle.cs" />
-    <Compile Include="WeiteresComponent.cs" />
+    <Compile Include="GhcAnchor.cs" />
     <Compile Include="TrajectoryCalculationInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
