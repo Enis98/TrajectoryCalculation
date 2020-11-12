@@ -13,13 +13,7 @@ namespace TrajectoryCalculation
 {
     public class TrajectoryCalculationComponent : GH_Component
     {
-        /// <summary>
-        /// Each implementation of GH_Component must provide a public 
-        /// constructor without any arguments.
-        /// Category represents the Tab in which the component will appear, 
-        /// Subcategory the panel. If you use non-existing tab or panel names, 
-        /// new tabs/panels will automatically be created.
-        /// </summary>
+        
         public TrajectoryCalculationComponent()
           : base("PathPoints",
                  "PathPoints",
@@ -31,6 +25,10 @@ namespace TrajectoryCalculation
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddPointParameter("Anchor points", "AnchorPts", "The anchor points", GH_ParamAccess.list);
+            pManager.AddTextParameter("Anchor point IDs in order", "AnchorPtsIDs", "The anchor point IDs in order", GH_ParamAccess.list);
+            pManager.AddVectorParameter("Anchor point orientations", "AnchorVecs", "The anchor point orientations", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Anchor point parameters", "AnchorParams", "Anchor point parameters", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Washer parameters", "WasherParams", "Washer parameters", GH_ParamAccess.list);
         }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
@@ -39,24 +37,8 @@ namespace TrajectoryCalculation
         }
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            List<Point3d> iPoints = new List<Point3d>();
-            DA.GetDataList(0, iPoints);
+            DA.Get
 
-            Point3d centroid = new Point3d(0.0, 0.0, 0.0);
-
-            foreach (Point3d point in iPoints)
-                centroid += point;
-
-            centroid /= iPoints.Count;
-
-            DA.SetData(0, centroid);
-
-            List<double> distances = new List<double>();
-
-            foreach (Point3d point in iPoints)
-                distances.Add(centroid.DistanceTo(point));
-
-            DA.SetDataList(1, distances);
         }
         protected override System.Drawing.Bitmap Icon
         {
