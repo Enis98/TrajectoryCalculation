@@ -2,49 +2,43 @@
 using System.Collections.Generic;
 
 using Grasshopper.Kernel;
+using Grasshopper.Kernel.Types;
 using Rhino.Geometry;
 
 namespace TrajectoryCalculation
 {
     public class WeiteresComponent : GH_Component
     {
-        /// <summary>
-        /// Initializes a new instance of the MyComponent1 class.
-        /// </summary>
         public WeiteresComponent()
           : base("MyComponent1",
                  "Nickname",
                  "Description",
-                 "TrajectoryCalculation",
-                 "Subcategory")
+                 "CorelessWinding",
+                 "Trajectory")
         {
         }
-
-        /// <summary>
-        /// Registers all the input parameters for this component.
-        /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
+            pManager.AddPointParameter("Anchor points", "AnchorPts", "The anchor points", GH_ParamAccess.list);
+            pManager.AddVectorParameter("Anchor point orientations", "AnchorVecs", "The anchor point orientations", GH_ParamAccess.list);
         }
-
-        /// <summary>
-        /// Registers all the output parameters for this component.
-        /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-        }
 
-        /// <summary>
-        /// This is the method that actually does the work.
-        /// </summary>
-        /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
+            pManager.AddBrepParameter("AnchorGeometry", "AnchorGeometry", "3D Geometry of the Anchors", GH_ParamAccess.item);
+        }
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-        }
+            List<Point3d> anchorpts = new List<Point3d>();
+            DA.GetDataList(0, anchorpts);
 
-        /// <summary>
-        /// Provides an Icon for the component.
-        /// </summary>
+            List<Vector3d> anchorvecs = new List<Vector3d>();
+            DA.GetDataList(1, anchorvecs);
+
+            AnchorGeometry all = new AnchorGeometry(anchorpts[1], anchorvecs[1], 20, 20, 20, 20);
+
+            DA.SetData(0, all);
+        }
         protected override System.Drawing.Bitmap Icon
         {
             get
@@ -54,10 +48,6 @@ namespace TrajectoryCalculation
                 return null;
             }
         }
-
-        /// <summary>
-        /// Gets the unique ID for this component. Do not change this ID after release.
-        /// </summary>
         public override Guid ComponentGuid
         {
             get { return new Guid("9b0c3a03-eb03-4078-a045-7299666e3aa6"); }
