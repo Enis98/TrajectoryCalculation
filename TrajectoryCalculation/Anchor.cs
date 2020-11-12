@@ -25,35 +25,17 @@ namespace TrajectoryCalculation
         }
 
 
-        public Anchor(Plane basePlane, double length, double height, double width)
-        {
-            AnchorVec = basePlane;
-            Length = length;
-            Width = width;
-            Height = height;
-        }
+        //public Anchor(Plane basePlane, double length, double height, double width)
+        //{
+            //AnchorVec = basePlane;
+            //Length = length;
+            //Width = width;
+            //Height = height;
+        //}
 
-        public List<LineCurve> ComputeDisplayLines()
-        {
-            Point3d A = AnchorVec.Origin + BasePlane.XAxis * Length * 0.5 + BasePlane.YAxis * Width * 0.5;
-            Point3d B = BasePlane.Origin - BasePlane.XAxis * Length * 0.5 + BasePlane.YAxis * Width * 0.5;
-            Point3d C = BasePlane.Origin - BasePlane.XAxis * Length * 0.5 - BasePlane.YAxis * Width * 0.5;
-            Point3d D = BasePlane.Origin + BasePlane.XAxis * Length * 0.5 - BasePlane.YAxis * Width * 0.5;
-            Point3d M = BasePlane.Origin + BasePlane.ZAxis * Height;
-
-            List<LineCurve> displayLines = new List<LineCurve>();
-
-            displayLines.Add(new LineCurve(A, B));
-            displayLines.Add(new LineCurve(B, C));
-            displayLines.Add(new LineCurve(C, D));
-            displayLines.Add(new LineCurve(D, A));
-
-            displayLines.Add(new LineCurve(A, M));
-            displayLines.Add(new LineCurve(B, M));
-            displayLines.Add(new LineCurve(C, M));
-            displayLines.Add(new LineCurve(D, M));
-
-            return displayLines;
-        }
+        //public List<LineCurve> ComputeDisplayLines(){}
+        
+            
+        
     }
 }
