@@ -33,6 +33,8 @@ namespace TrajectoryCalculation
             pManager.AddNumberParameter("Time", "Time", "Time at a Path Point", GH_ParamAccess.list);
             pManager.AddNumberParameter("FiberLength", "FiberLength", "Fiber Length up to a Path Point", GH_ParamAccess.item);
             pManager.AddLineParameter("Line", "Line", "Line", GH_ParamAccess.list);
+            pManager.AddArcParameter("arc", "arc", "arc", GH_ParamAccess.item);
+            
         }
         protected override void SolveInstance(IGH_DataAccess DA)
         {
@@ -45,6 +47,13 @@ namespace TrajectoryCalculation
 
             List<Vector3d> anchorvecs = new List<Vector3d>();
             DA.GetDataList(2, anchorvecs);
+            List<Vector3d> nanchorvecs = new List<Vector3d>();                  // normed anchorvec
+
+            foreach(Vector3d anchorvec in anchorvecs)
+            {
+                Vector3d nanchorvec = anchorvec / anchorvec.Length;             // calc of normed anchorvec ->  list: nanchorvecs
+                nanchorvecs.Add(nanchorvec);
+            }
 
             double anchorparam = 0;
             DA.GetData(3, ref anchorparam);
@@ -55,6 +64,7 @@ namespace TrajectoryCalculation
             Boolean leftrot = new Boolean();
             DA.GetData(5, ref leftrot);
             // input parameter definition
+
 
             // output parameter definition
             List<Point3d> pathpts = new List<Point3d>();
@@ -68,15 +78,34 @@ namespace TrajectoryCalculation
             double fiberlength = 0;
 
             List<LineCurve> displayLines = new List<LineCurve>();
-            // output parameter definition
+
+            Vector3d linevec = new Vector3d();
+            // output and code parameter definition
+
 
             // code
+            Point3d anchorpt0 = anchorpts[gfsyntax[0]];
+            Point3d anchorpt1 = anchorpts[gfsyntax[1]];
+
+            Vector3d linevec0 = anchorpt1 - anchorpt0;
+            Vector3d nlinevec0 = linevec0 / linevec0.Length;                        // norm
+            Vector3d nanchorvec0 = nanchorvecs[gfsyntax[0]];
+            Vector3d crossvec0 = Vector3d.CrossProduct(nanchorvec0, nlinevec0);     // right hand system
+            Point3d arcminpt0 = new Point3d(anchorpt0 - crossvec0 * washerparam);
+            Point3d arcmaxpt0 = new Point3d(anchorpt0 + crossvec0 * washerparam);
+            Arc arc = new Arc(arcmaxpt0, nlinevec0 * -1, arcminpt0);
+
+
+
 
             for (int i = 0; i < gfsyntax.Count - 1; i++)
             {
-                Point3d pt1 = anchorpts[gfsyntax[i]];
-                Point3d pt2 = anchorpts[gfsyntax[i + 1]];
-                displayLines.Add(new LineCurve(pt1, pt2));
+                Point3d pt1 = anchorpts[gfsyntax[i]];                               // pos of current anchor
+                Point3d pt2 = anchorpts[gfsyntax[i + 1]];                           // pos of next anchor
+                linevec = pt2 - pt1;                                                // vector that equals line between current and next anchor with direction onto next anchor
+                Vector3d nlinevec = linevec / linevec.Length;                       // normed linevector
+                
+                displayLines.Add(new LineCurve(pt1, pt2));                          // lines between anchors that follows syntax
                 pathpts.Add(pt1);
             }
 
@@ -90,15 +119,9 @@ namespace TrajectoryCalculation
             {
                 orivec = anchorvec * 2.0;
                 orivecs.Add(orivec);
+                tanvecs.Add(orivec);
             }
                
-
-            Vector3d tanvec = new Vector3d();
-            foreach (Vector3d anchorvec in anchorvecs)
-            {
-                tanvec = anchorvec * 2.0;
-                tanvecs.Add(tanvec);
-            }
                
             if (leftrot == true)
                 time.Add(1);
@@ -121,6 +144,8 @@ namespace TrajectoryCalculation
             DA.SetData(4, fiberlength);
 
             DA.SetDataList(5, displayLines);
+
+            DA.SetData(6, arc);
             // set output parameter
         }
         protected override System.Drawing.Bitmap Icon
