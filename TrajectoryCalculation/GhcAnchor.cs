@@ -21,6 +21,7 @@ namespace TrajectoryCalculation
         {
             pManager.AddPointParameter("Anchor points", "AnchorPts", "The anchor points", GH_ParamAccess.list);
             pManager.AddVectorParameter("Anchor point orientations", "AnchorVecs", "The anchor point orientations", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Anchor point parameters", "AnchorParams", "Anchor point parameters", GH_ParamAccess.item);
         }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
@@ -35,11 +36,14 @@ namespace TrajectoryCalculation
             List<Vector3d> anchorvecs = new List<Vector3d>();
             DA.GetDataList(1, anchorvecs);
 
+            double dia1 = 0;
+            DA.GetData(2, ref dia1);
+
             DataTree<Brep> displayGeo = new DataTree<Brep>();
 
             for (int i=0; i < anchorpts.Count; i++)
             { 
-                AnchorGeometry all = new AnchorGeometry(anchorpts[i], anchorvecs[i], 10, 5, 2, 8);
+                AnchorGeometry all = new AnchorGeometry(anchorpts[i], anchorvecs[i], 40, dia1/2, 5, 22.5);
                 List<Brep> displayGeometry = all.ComputeAnchorGeometry();
                 displayGeo.AddRange(displayGeometry);
             }
