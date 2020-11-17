@@ -86,11 +86,14 @@ namespace TrajectoryCalculation
             List<Curve> curves = new List<Curve>();
             double fiberlength = 0;
             int neg = 0;
-            Point3d lastpoint = new Point3d();
+            Point3d endpt = new Point3d();
             Vector3d vec = new Vector3d();
             Arc arc = new Arc();
             List<Point3d> ipts = new List<Point3d>();
-            
+
+            LineCurve line1 = new LineCurve();                                  // for last anchor
+            Brep sph2 = new Brep();
+
             // output and code parameter definition
 
 
@@ -124,14 +127,14 @@ namespace TrajectoryCalculation
             if (leftrot == true)
             {
                 StRot = -1;
-                lastpoint = arcminpt0;
+                endpt = arcminpt0;
             }
             else
             {
                 StRot = 1;
-                lastpoint = arcmaxpt0;
+                endpt = arcmaxpt0;
             }
-            pathpts.Add(lastpoint);
+            pathpts.Add(endpt);
             arc = new Arc(arcminpt0, nlinevec0 * StRot, arcmaxpt0);
 
             // Path by Syntax
@@ -150,12 +153,12 @@ namespace TrajectoryCalculation
                 Sphere sphere1 = new Sphere(anchorpt1, sphereparam);
                 Brep sph1 = Brep.CreateFromSphere(sphere1);
                 Sphere sphere2 = new Sphere(anchorpt2, sphereparam);
-                Brep sph2 = Brep.CreateFromSphere(sphere2);
+                sph2 = Brep.CreateFromSphere(sphere2);
 
                 spheres.Add(sphere1);
 
                 line0 = new LineCurve(pt0, pt1);
-                LineCurve line1 = new LineCurve(pt1, pt2);
+                line1 = new LineCurve(pt1, pt2);
 
                 curves.Add(line1);
 
@@ -165,14 +168,15 @@ namespace TrajectoryCalculation
                 Intersection.CurveBrep(line1, sph1, 0, out Curve[] curve2, out Point3d[] ipt2);
                 pathpts.Add(ipt2[0]);
 
-                vec0 = ipt0[0] - pt0;                                                   // vectors between intersection points an anchorpoints
+
+                vec0 = ipt0[0] - pt0;                                                   // vectors between intersection points and anchorpoints
                 Vector3d nvec0 = vec0 / vec0.Length;
                 Vector3d vec1 = ipt1[0] - pt1;                                          
                 Vector3d nvec1 = vec1 / vec1.Length;
                 Vector3d vec2 = ipt2[0] - pt1;                                         
                 Vector3d nvec2 = vec2 / vec2.Length;
 
-                Vector3d veclast = lastpoint - pt0;
+                Vector3d veclast = endpt - pt0;
                 Vector3d nveclast = veclast / veclast.Length;
 
                 Point3d lpt0 = ipt0[0] + anchorparam * nveclast;
@@ -208,20 +212,25 @@ namespace TrajectoryCalculation
                     neg = -1;
                 }
 
+                Point3d lpt1 = ipt1[0] + neg * nB2 * anchorparam;
+                pathpts.Add(lpt1);
+
                 Point3d startpt = pt1 + neg * nB2 * washerparam;
                 pathpts.Add(startpt);
-                Point3d endpt = pt1 + neg * nA2 * washerparam;
+                endpt = pt1 + neg * nA2 * washerparam;
                 pathpts.Add(endpt);
-
-                lastpoint = endpt;
 
                 if(hook == "X")
                 {
                     // weitere umwicklung
                 }
-                
-                pathpts.Add(pt1);
+
+
             }
+
+            Intersection.CurveBrep(line1, sph2, 0, out Curve[] curve3, out Point3d[] ipt3);
+            pathpts.Add(ipt3[0]);
+
             // code
 
             // test of output parameter
