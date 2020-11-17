@@ -106,9 +106,9 @@ namespace TrajectoryCalculation
             spheres.Add(sphere0);
 
             Brep sph0 = Brep.CreateFromSphere(sphere0);
-            Intersection.CurveBrep(line0, sph0, 0, out Curve[] icurves, out Point3d[] ipt);
+            Intersection.CurveBrep(line0, sph0, 0, out Curve[] icurves, out Point3d[] ipt0);                  // intersection point sphere - polyline
 
-            pathpts.Add(ipt[0]);
+            pathpts.Add(ipt0[0]);
 
             Vector3d vec0 = anchorpt1 - anchorpt0;
             Vector3d nlinevec0 = vec0 / vec0.Length;                                // norm
@@ -137,23 +137,33 @@ namespace TrajectoryCalculation
             // Path by Syntax
             for (int i = 1; i < syntax.Count - 1; i++)
             {
-                Point3d hookpt0 = anchorpts[syntax[i - 1]];                         // hooking position can differ from anchor mid point
-                Point3d hookpt1 = anchorpts[syntax[i]];
-                Point3d hookpt2 = anchorpts[syntax[i + 1]];
+                anchorpt0 = anchorpts[syntax[i - 1]];                         // hooking position can differ from anchor mid point
+                anchorpt1 = anchorpts[syntax[i]];
+                Point3d anchorpt2 = anchorpts[syntax[i + 1]];
                 
-                Point3d pt0 = hookpt0;
-                Point3d pt1 = hookpt1;
-                Point3d pt2 = hookpt2;
+                Point3d pt0 = anchorpt0;
+                Point3d pt1 = anchorpt1;
+                Point3d pt2 = anchorpt2;
 
-                Sphere sph1 = new Sphere(hookpt1, sphereparam);
-                Sphere sph2 = new Sphere(hookpt2, sphereparam);
+                sphere0 = new Sphere(anchorpt0, sphereparam);
+                sph0 = Brep.CreateFromSphere(sphere0);
+                Sphere sphere1 = new Sphere(anchorpt1, sphereparam);
+                Brep sph1 = Brep.CreateFromSphere(sphere1);
+                Sphere sphere2 = new Sphere(anchorpt2, sphereparam);
+                Brep sph2 = Brep.CreateFromSphere(sphere2);
 
-                spheres.Add(sph1);
+                spheres.Add(sphere1);
 
-                Curve line = new LineCurve(pt0, pt1);
-                Curve line1 = new LineCurve(pt1, pt2);
+                line0 = new LineCurve(pt0, pt1);
+                LineCurve line1 = new LineCurve(pt1, pt2);
 
-                curves.Add(line);
+                curves.Add(line1);
+
+                Intersection.CurveBrep(line0, sph0, 0, out Curve[] curve0, out ipt0);
+                Intersection.CurveBrep(line0, sph1, 0, out Curve[] curve1, out Point3d[] ipt1);
+                pathpts.Add(ipt1[0]);
+                Intersection.CurveBrep(line1, sph1, 0, out Curve[] curve2, out Point3d[] ipt2);
+                pathpts.Add(ipt2[0]);
 
                 Vector3d vec1 = pt1 - pt0;                                          // vector that equals line between last and current anchor with direction onto current anchor
                 Vector3d nvec1 = vec1 / vec1.Length;
