@@ -32,12 +32,11 @@ namespace TrajectoryCalculation
 
             List<Point3d> pts = new List<Point3d>();
 
-            for (double t = 0; t < 1.0; t = t + 0.1)
+            for (double t = 0; t < 1.0; t = t + 0.05)
             {
                 Point3d pt = (1 - t) * (1 - t) * (1 - t) * pt1 + 3 * t * (1 - t) * (1 - t) * pt2 + 3 * t * t * (1 - t) * pt3 + t * t * t * pt4;
                 pts.Add(pt);
             }
-            pts.Add(pt4);
 
             return pts;
         }
@@ -54,7 +53,6 @@ namespace TrajectoryCalculation
                 Point3d pt = (1 - t) * (1 - t) * (1 - t) * pt1 + 3 * t * (1 - t) * (1 - t) * pt2 + 3 * t * t * (1 - t) * pt3 + t * t * t * pt4;
                 pts.Add(pt);
             }
-            pts.Add(pt4);
 
             Curve curve = new PolylineCurve(pts);
 

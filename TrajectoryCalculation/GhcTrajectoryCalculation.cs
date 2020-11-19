@@ -32,7 +32,7 @@ namespace TrajectoryCalculation
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddPointParameter("CheckPts", "CheckPts", "CheckPoints for curve generation", GH_ParamAccess.list);
-            //pManager.AddPointParameter("PathPts", "PathPts", "Path Points of winding structure", GH_ParamAccess.list);
+            pManager.AddPointParameter("PathPts", "PathPts", "Path Points of winding structure", GH_ParamAccess.list);
             pManager.AddVectorParameter("OriVecs", "OriVecs", "Orientation Vector of a Path Point", GH_ParamAccess.list);
             pManager.AddVectorParameter("TanVecs", "TanVecs", "Tangential Vector of a Path Point", GH_ParamAccess.list);
             pManager.AddNumberParameter("Time", "Time", "Time at a Path Point", GH_ParamAccess.list);
@@ -83,6 +83,7 @@ namespace TrajectoryCalculation
 
             // output and code parameter definition : global variables
             List<Point3d> checkpts = new List<Point3d>();
+            List<Point3d> pathpts = new List<Point3d>();
             List<Vector3d> orivecs = new List<Vector3d>();
             List<Vector3d> tanvecs = new List<Vector3d>();
             List<double> time = new List<double>();
@@ -215,8 +216,10 @@ namespace TrajectoryCalculation
                 Point3d stpt = pt1 + neg * nB2 * washerparam;
                 checkpts.Add(stpt);
 
-                List<Point3d> spline0 = BezierSplinePoints()
-
+                BezierSpline spline0 = new BezierSpline(endpt, lpt0, vec0/2, -vec0/2);
+                List<Point3d> sp0 = spline0.BezierSplinePoints();
+                pathpts.AddRange(sp0);
+                
                 endpt = pt1 + neg * nA2 * washerparam + nanchorvecs[i] * 0.3 * anchorparam * h;
                 checkpts.Add(endpt);
 
@@ -264,12 +267,13 @@ namespace TrajectoryCalculation
 
             // set output parameter
             DA.SetDataList(0, checkpts);
-            DA.SetDataList(1, orivecs);
-            DA.SetDataList(2, tanvecs);
-            DA.SetDataList(3, time);
-            DA.SetData(4, fiberlength);
-            DA.SetDataList(5, curves);
-            DA.SetDataList(6, arc);
+            DA.SetDataList(1, pathpts);
+            DA.SetDataList(2, orivecs);
+            DA.SetDataList(3, tanvecs);
+            DA.SetDataList(4, time);
+            DA.SetData(5, fiberlength);
+            DA.SetDataList(6, curves);
+            DA.SetDataList(7, arc);
             // set output parameter
         }
         protected override System.Drawing.Bitmap Icon
