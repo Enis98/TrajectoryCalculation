@@ -18,7 +18,8 @@ namespace TrajectoryCalculation
         {
         }
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
-        {   
+        {
+            pManager.AddCurveParameter("Fiber polylines", "Polylines", "Fiber syntaxes as polylines", GH_ParamAccess.list);
             pManager.AddIntegerParameter("Anchor point IDs", "AnchorIDs", "Anchor point IDs", GH_ParamAccess.list);
             pManager.AddTextParameter("Hooking type", "Hooking", "Anchor point hooking type", GH_ParamAccess.list);
             pManager.AddPointParameter("Anchor points", "AnchorPts", "The anchor points", GH_ParamAccess.list);
@@ -30,7 +31,8 @@ namespace TrajectoryCalculation
         }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddPointParameter("PathPts", "PathPts", "Path Points of winding structure", GH_ParamAccess.list);
+            pManager.AddPointParameter("CheckPts", "CheckPts", "CheckPoints for curve generation", GH_ParamAccess.list);
+            //pManager.AddPointParameter("PathPts", "PathPts", "Path Points of winding structure", GH_ParamAccess.list);
             pManager.AddVectorParameter("OriVecs", "OriVecs", "Orientation Vector of a Path Point", GH_ParamAccess.list);
             pManager.AddVectorParameter("TanVecs", "TanVecs", "Tangential Vector of a Path Point", GH_ParamAccess.list);
             pManager.AddNumberParameter("Time", "Time", "Time at a Path Point", GH_ParamAccess.list);
@@ -42,18 +44,21 @@ namespace TrajectoryCalculation
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             // input parameter definition
+            List<Curve> polylines = new List<Curve>();
+            DA.GetDataList(0, polylines);
+
             List<int> syntax = new List<int>();
-            DA.GetDataList(0, syntax);
+            DA.GetDataList(1, syntax);
 
             List<string> hooking = new List<string>();
-            DA.GetDataList(1, hooking);
+            DA.GetDataList(2, hooking);
 
             List<Point3d> anchorpts = new List<Point3d>();
-            DA.GetDataList(2, anchorpts);
+            DA.GetDataList(3, anchorpts);
             // neue liste die in for schleife benutzt wird machen
 
             List<Vector3d> anchorvecs = new List<Vector3d>();
-            DA.GetDataList(3, anchorvecs);
+            DA.GetDataList(4, anchorvecs);
             List<Vector3d> nanchorvecs = new List<Vector3d>();                  // normed anchorvecs
 
             foreach(Vector3d anchorvec in anchorvecs)
@@ -63,37 +68,44 @@ namespace TrajectoryCalculation
             }
 
             double anchorparam = 0;
-            DA.GetData(4, ref anchorparam);
+            DA.GetData(5, ref anchorparam);
 
             double washerparam = 0;
-            DA.GetData(5, ref washerparam);
+            DA.GetData(6, ref washerparam);
 
             double sphereparam = 0;
-            DA.GetData(6, ref sphereparam);
+            DA.GetData(7, ref sphereparam);
 
             Boolean leftrot = new Boolean();
-            DA.GetData(7, ref leftrot);
+            DA.GetData(8, ref leftrot);
             // input parameter definition
 
 
             // output and code parameter definition
-            
-            List<Point3d> pathpts = new List<Point3d>();
+            List<Point3d> checkpts = new List<Point3d>();
             List<Vector3d> orivecs = new List<Vector3d>();
             List<Vector3d> tanvecs = new List<Vector3d>();
             List<double> time = new List<double>();
             List<Sphere> spheres = new List<Sphere>();
             List<Curve> curves = new List<Curve>();
+
             double fiberlength = 0;
             int neg = 0;
+            int h = 0;
+
             Point3d endpt = new Point3d();
+            Point3d startpt = new Point3d();
             Vector3d vec = new Vector3d();
+            Vector3d nA2 = new Vector3d();
+            Vector3d nB2 = new Vector3d();
+            Point3d ipt2 = new Point3d();
+            Curve polyline1 = polylines[0];
+
             Arc arc = new Arc();
             List<Point3d> ipts = new List<Point3d>();
 
             LineCurve line1 = new LineCurve();                                  // for last anchor
             Brep sph2 = new Brep();
-
             // output and code parameter definition
 
 
@@ -102,16 +114,9 @@ namespace TrajectoryCalculation
             Point3d anchorpt0 = anchorpts[syntax[0]];
             Point3d anchorpt1 = anchorpts[syntax[1]];
 
-            Curve line0 = new LineCurve(anchorpt0, anchorpt1);
-            curves.Add(line0);
 
             Sphere sphere0 = new Sphere(anchorpt0, sphereparam);
             spheres.Add(sphere0);
-
-            Brep sph0 = Brep.CreateFromSphere(sphere0);
-            Intersection.CurveBrep(line0, sph0, 0, out Curve[] icurves, out Point3d[] ipt0);                  // intersection point first sphere - polyline
-
-            pathpts.Add(ipt0[0]);
 
             Vector3d vec0 = anchorpt1 - anchorpt0;
             Vector3d nlinevec0 = vec0 / vec0.Length;                                // norm
@@ -121,66 +126,61 @@ namespace TrajectoryCalculation
             Point3d arcminpt0 = new Point3d(anchorpt0 - crossvec0 * washerparam);
             Point3d arcmaxpt0 = new Point3d(anchorpt0 + crossvec0 * washerparam);
 
-            int StRot = 0;
-
             // first hooking
             if (leftrot == true)
             {
-                StRot = -1;
+                startpt = arcmaxpt0;
                 endpt = arcminpt0;
             }
             else
             {
-                StRot = 1;
+                startpt = arcminpt0;
                 endpt = arcmaxpt0;
             }
-            pathpts.Add(endpt);
-            arc = new Arc(arcminpt0, nlinevec0 * StRot, arcmaxpt0);
+            checkpts.Add(endpt);
+            arc = new Arc(startpt, - nlinevec0, endpt);
+
 
             // Path by Syntax
             for (int i = 1; i < syntax.Count - 1; i++)
             {
                 anchorpt0 = anchorpts[syntax[i - 1]];                         // hooking position can differ from anchor mid point
                 anchorpt1 = anchorpts[syntax[i]];
-                Point3d anchorpt2 = anchorpts[syntax[i + 1]];
                 
                 Point3d pt0 = anchorpt0;
                 Point3d pt1 = anchorpt1;
-                Point3d pt2 = anchorpt2;
 
                 sphere0 = new Sphere(anchorpt0, sphereparam);
-                sph0 = Brep.CreateFromSphere(sphere0);
+                Brep sph0 = Brep.CreateFromSphere(sphere0);
                 Sphere sphere1 = new Sphere(anchorpt1, sphereparam);
                 Brep sph1 = Brep.CreateFromSphere(sphere1);
-                Sphere sphere2 = new Sphere(anchorpt2, sphereparam);
-                sph2 = Brep.CreateFromSphere(sphere2);
 
                 spheres.Add(sphere1);
 
-                line0 = new LineCurve(pt0, pt1);
-                line1 = new LineCurve(pt1, pt2);
+                Curve polyline0 = polylines[i - 1];
+                polyline1 = polylines[i];
 
                 curves.Add(line1);
 
-                Intersection.CurveBrep(line0, sph0, 0, out Curve[] curve0, out ipt0);
-                Intersection.CurveBrep(line0, sph1, 0, out Curve[] curve1, out Point3d[] ipt1);
-                pathpts.Add(ipt1[0]);
-                Intersection.CurveBrep(line1, sph1, 0, out Curve[] curve2, out Point3d[] ipt2);
-                pathpts.Add(ipt2[0]);
+                Intersection.CurveBrep(polyline0, sph0, 0, out Curve[] curve1, out Point3d[] ipt);
+                Point3d ipt0 = ipt[0];
+                checkpts.Add(ipt0);
+                Intersection.CurveBrep(polyline0, sph1, 0, out curve1, out ipt);
+                Point3d ipt1 = ipt[0];
+                checkpts.Add(ipt1);
+                Intersection.CurveBrep(polyline1, sph1, 0, out curve1, out ipt);
+                ipt2 = ipt[0];
 
 
-                vec0 = ipt0[0] - pt0;                                                   // vectors between intersection points and anchorpoints
+                vec0 = ipt0 - pt0;                                                   // vectors between intersection points and anchorpoints
                 Vector3d nvec0 = vec0 / vec0.Length;
-                Vector3d vec1 = ipt1[0] - pt1;                                          
+                Vector3d vec1 = ipt1 - pt1;                                          
                 Vector3d nvec1 = vec1 / vec1.Length;
-                Vector3d vec2 = ipt2[0] - pt1;                                         
+                Vector3d vec2 = ipt2 - pt1;                                         
                 Vector3d nvec2 = vec2 / vec2.Length;
 
                 Vector3d veclast = endpt - pt0;
                 Vector3d nveclast = veclast / veclast.Length;
-
-                Point3d lpt0 = ipt0[0] + anchorparam * nveclast;
-                pathpts.Add(lpt0);
 
                 Vector3d nvecb = vec2 / vec2.Length;                                    // calculate projected vectors for hooking types
                 Vector3d nveca = vec1 / vec1.Length;
@@ -196,63 +196,83 @@ namespace TrajectoryCalculation
 
                 Vector3d A1 = veca1;
                 Vector3d A2 = veca2;
-                Vector3d nA2 = A2 / A2.Length;
+                nA2 = A2 / A2.Length;
                 Vector3d B1 = vecb1;
                 Vector3d B2 = vecb2;
-                Vector3d nB2 = B2 / B2.Length;
+                nB2 = B2 / B2.Length;
 
                 string hook = hooking[syntax[i]];
 
                 if(hook == "Y")
                 {
                     neg = 1;
+                    h = 1;
                 }
-                else if(hook == "U" || hook == "X")
+                else if(hook == "X")
                 {
                     neg = -1;
+                    h = 1;   
                 }
-
-                Point3d lpt1 = ipt1[0] + neg * nB2 * anchorparam;
-                pathpts.Add(lpt1);
-
-                Point3d startpt = pt1 + neg * nB2 * washerparam;
-                pathpts.Add(startpt);
-                endpt = pt1 + neg * nA2 * washerparam;
-                pathpts.Add(endpt);
-
-                if(hook == "X")
+                else if(hook == "U")
                 {
-                    // weitere umwicklung
-                }
+                    neg = -1;
+                    h = 0;
+                }                                                                       // Generierung der Kurven ab hier -> Unterteilung in Pfadpunkte
+                                                                                        // Vektoren + Zeiten
+                Point3d lpt0 = ipt0 + anchorparam * nveclast;                                       
+                checkpts.Add(lpt0);
 
+                Point3d lpt1 = ipt1 + neg * nB2 * anchorparam;
+                checkpts.Add(lpt1);
 
+                Point3d stpt = pt1 + neg * nB2 * washerparam;
+                checkpts.Add(stpt);
+
+                endpt = pt1 + neg * nA2 * washerparam;
+                checkpts.Add(endpt);
             }
 
-            Intersection.CurveBrep(line1, sph2, 0, out Curve[] curve3, out Point3d[] ipt3);
-            pathpts.Add(ipt3[0]);
+            Point3d anchorpt2 = anchorpts[syntax.Count - 1];
 
+            checkpts.Add(ipt2);
+            Point3d lpt2 = ipt2 + neg * nA2 * anchorparam;
+            checkpts.Add(lpt2);
+            Sphere sphere2 = new Sphere(anchorpt2, sphereparam);
+            sph2 = Brep.CreateFromSphere(sphere2);
+            spheres.Add(sphere2);
+
+            Intersection.CurveBrep(polyline1, sph2, 0, out Curve[] curve3, out Point3d[] inpt3);
+            Point3d ipt3 = inpt3[0];
+            checkpts.Add(ipt3);
+
+            string lasthook = hooking[syntax.Count - 1];
+
+            if (lasthook == "Y")
+            {
+                neg = 1;
+                h = 1;
+            }
+            else if (lasthook == "X")
+            {
+                neg = -1;
+                h = 1;
+            }
+            else if (lasthook == "U")
+            {
+                neg = -1;
+                h = 0;
+            }
+            
+            Point3d lpt3 = ipt3 + neg * nA2 * anchorparam;
+            checkpts.Add(lpt3);
+
+            Point3d pt2 = anchorpt2;
+            Point3d lastpoint = pt2 + neg * nA2 * washerparam;
+            checkpts.Add(lastpoint);
             // code
 
-            // test of output parameter
-            Vector3d orivec = new Vector3d();                   
-            foreach (Vector3d nanchorvec in nanchorvecs)
-            {
-                orivec = nanchorvec * 2.0;
-                orivecs.Add(orivec);
-                tanvecs.Add(orivec);
-            }
-               
-               
-            if (leftrot == true)
-                time.Add(1);
-            else
-                time.Add(5);
-
-            fiberlength = 5;                                    
-            // test of output parameter
-
             // set output parameter
-            DA.SetDataList(0, pathpts);
+            DA.SetDataList(0, checkpts);
             DA.SetDataList(1, orivecs);
             DA.SetDataList(2, tanvecs);
             DA.SetDataList(3, time);
