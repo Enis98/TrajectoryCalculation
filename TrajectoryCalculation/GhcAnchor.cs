@@ -22,11 +22,14 @@ namespace TrajectoryCalculation
             pManager.AddPointParameter("Anchor points", "AnchorPts", "The anchor points", GH_ParamAccess.list);
             pManager.AddVectorParameter("Anchor point orientations", "AnchorVecs", "The anchor point orientations", GH_ParamAccess.list);
             pManager.AddNumberParameter("Anchor point parameters", "AnchorParams", "Anchor point parameters", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Sphere parameters", "SphereParams", "Sphere parameters", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("DisplaySpheres", "DisplaySpheres", "Displays spheres if true", GH_ParamAccess.item);
         }
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
 
             pManager.AddBrepParameter("AnchorGeometry", "AnchorGeometry", "3D Geometry of the Anchors", GH_ParamAccess.tree);
+            pManager.AddSurfaceParameter("spheres", "spheres", "spheres", GH_ParamAccess.list);
         }
         protected override void SolveInstance(IGH_DataAccess DA)
         {
@@ -39,7 +42,15 @@ namespace TrajectoryCalculation
             double dia1 = 0;
             DA.GetData(2, ref dia1);
 
+            double sphereparam = 0;
+            DA.GetData(3, ref sphereparam);
+
+            Boolean dispsphere = new Boolean();
+            DA.GetData(4, ref dispsphere);
+
             DataTree<Brep> displayGeo = new DataTree<Brep>();
+            List<Sphere> spheres = new List<Sphere>();
+            Sphere sphere = new Sphere();
 
             for (int i=0; i < anchorpts.Count; i++)
             { 
@@ -48,8 +59,19 @@ namespace TrajectoryCalculation
                 displayGeo.AddRange(displayGeometry);
             }
 
+            for (int i = 0; i < anchorpts.Count; i++)
+            {
+                    sphere = new Sphere(anchorpts[i], sphereparam);                
+                if(dispsphere==true)
+                {
+                    spheres.Add(sphere);
+                }
+            }
+
 
             DA.SetDataTree(0, displayGeo);
+
+            DA.SetDataList(1, spheres);
         }
         protected override System.Drawing.Bitmap Icon
         {

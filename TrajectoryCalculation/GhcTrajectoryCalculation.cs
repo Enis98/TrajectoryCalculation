@@ -38,8 +38,8 @@ namespace TrajectoryCalculation
             pManager.AddNumberParameter("Time", "Time", "Time at a Path Point", GH_ParamAccess.list);
             pManager.AddNumberParameter("FiberLength", "FiberLength", "Fiber Length up to a Path Point", GH_ParamAccess.item);
             pManager.AddCurveParameter("curves", "curves", "curves", GH_ParamAccess.list);
-            pManager.AddArcParameter("arcs", "arc", "arc", GH_ParamAccess.item);
-            pManager.AddSurfaceParameter("spheres", "spheres", "spheres", GH_ParamAccess.list);
+            pManager.AddArcParameter("arcs", "arc", "arc", GH_ParamAccess.list);
+
         }
         protected override void SolveInstance(IGH_DataAccess DA)
         {
@@ -81,7 +81,7 @@ namespace TrajectoryCalculation
             // input parameter definition
 
 
-            // output and code parameter definition
+            // output and code parameter definition : global variables
             List<Point3d> checkpts = new List<Point3d>();
             List<Vector3d> orivecs = new List<Vector3d>();
             List<Vector3d> tanvecs = new List<Vector3d>();
@@ -95,16 +95,11 @@ namespace TrajectoryCalculation
 
             Point3d endpt = new Point3d();
             Point3d startpt = new Point3d();
-            Vector3d vec = new Vector3d();
             Vector3d nA2 = new Vector3d();
             Vector3d nB2 = new Vector3d();
             Point3d ipt2 = new Point3d();
             Curve polyline1 = polylines[0];
-
-            Arc arc = new Arc();
-            List<Point3d> ipts = new List<Point3d>();
-
-            LineCurve line1 = new LineCurve();                                  // for last anchor
+            List<Arc> arc = new List<Arc>();
             Brep sph2 = new Brep();
             // output and code parameter definition
 
@@ -113,10 +108,6 @@ namespace TrajectoryCalculation
 
             Point3d anchorpt0 = anchorpts[syntax[0]];
             Point3d anchorpt1 = anchorpts[syntax[1]];
-
-
-            Sphere sphere0 = new Sphere(anchorpt0, sphereparam);
-            spheres.Add(sphere0);
 
             Vector3d vec0 = anchorpt1 - anchorpt0;
             Vector3d nlinevec0 = vec0 / vec0.Length;                                // norm
@@ -138,9 +129,9 @@ namespace TrajectoryCalculation
                 endpt = arcmaxpt0;
             }
             checkpts.Add(endpt);
-            arc = new Arc(startpt, - nlinevec0, endpt);
-
-
+            Arc arc0 = new Arc(startpt, - nlinevec0, endpt);
+            arc.Add(arc0);
+            
             // Path by Syntax
             for (int i = 1; i < syntax.Count - 1; i++)
             {
@@ -150,17 +141,13 @@ namespace TrajectoryCalculation
                 Point3d pt0 = anchorpt0;
                 Point3d pt1 = anchorpt1;
 
-                sphere0 = new Sphere(anchorpt0, sphereparam);
+                Sphere sphere0 = new Sphere(anchorpt0, sphereparam);
                 Brep sph0 = Brep.CreateFromSphere(sphere0);
                 Sphere sphere1 = new Sphere(anchorpt1, sphereparam);
                 Brep sph1 = Brep.CreateFromSphere(sphere1);
 
-                spheres.Add(sphere1);
-
                 Curve polyline0 = polylines[i - 1];
                 polyline1 = polylines[i];
-
-                curves.Add(line1);
 
                 Intersection.CurveBrep(polyline0, sph0, 0, out Curve[] curve1, out Point3d[] ipt);
                 Point3d ipt0 = ipt[0];
@@ -172,7 +159,7 @@ namespace TrajectoryCalculation
                 ipt2 = ipt[0];
 
 
-                vec0 = ipt0 - pt0;                                                   // vectors between intersection points and anchorpoints
+                vec0 = ipt0 - pt0;   // vectors between intersection points and anchorpoints
                 Vector3d nvec0 = vec0 / vec0.Length;
                 Vector3d vec1 = ipt1 - pt1;                                          
                 Vector3d nvec1 = vec1 / vec1.Length;
@@ -219,7 +206,7 @@ namespace TrajectoryCalculation
                     h = 0;
                 }                                                                       // Generierung der Kurven ab hier -> Unterteilung in Pfadpunkte
                                                                                         // Vektoren + Zeiten
-                Point3d lpt0 = ipt0 + anchorparam * nveclast;                                       
+                Point3d lpt0 = ipt0 + anchorparam * nveclast;                           
                 checkpts.Add(lpt0);
 
                 Point3d lpt1 = ipt1 + neg * nB2 * anchorparam;
@@ -228,18 +215,22 @@ namespace TrajectoryCalculation
                 Point3d stpt = pt1 + neg * nB2 * washerparam;
                 checkpts.Add(stpt);
 
-                endpt = pt1 + neg * nA2 * washerparam;
+                List<Point3d> spline0 = BezierSplinePoints()
+
+                endpt = pt1 + neg * nA2 * washerparam + nanchorvecs[i] * 0.3 * anchorparam * h;
                 checkpts.Add(endpt);
+
+                Arc arc1 = new Arc(stpt, - vec1, endpt);                                  // arc segment
+                arc.Add(arc1);
             }
 
-            Point3d anchorpt2 = anchorpts[syntax.Count - 1];
+            Point3d anchorpt2 = anchorpts[syntax[syntax.Count - 1]];
 
             checkpts.Add(ipt2);
             Point3d lpt2 = ipt2 + neg * nA2 * anchorparam;
             checkpts.Add(lpt2);
             Sphere sphere2 = new Sphere(anchorpt2, sphereparam);
             sph2 = Brep.CreateFromSphere(sphere2);
-            spheres.Add(sphere2);
 
             Intersection.CurveBrep(polyline1, sph2, 0, out Curve[] curve3, out Point3d[] inpt3);
             Point3d ipt3 = inpt3[0];
@@ -278,8 +269,7 @@ namespace TrajectoryCalculation
             DA.SetDataList(3, time);
             DA.SetData(4, fiberlength);
             DA.SetDataList(5, curves);
-            DA.SetData(6, arc);
-            DA.SetDataList(7, spheres);
+            DA.SetDataList(6, arc);
             // set output parameter
         }
         protected override System.Drawing.Bitmap Icon
