@@ -96,10 +96,9 @@ namespace TrajectoryCalculation
 
             Point3d endpt = new Point3d();
             Point3d startpt = new Point3d();
-            Vector3d nA2 = new Vector3d();
-            Vector3d nB2 = new Vector3d();
             Point3d ipt2 = new Point3d();
             Vector3d vec2 = new Vector3d();
+            Vector3d veca2 = new Vector3d();
             Curve polyline1 = polylines[0];
             List<Arc> arc = new List<Arc>();
             Brep sph2 = new Brep();
@@ -171,27 +170,9 @@ namespace TrajectoryCalculation
                 Vector3d veclast = endpt - pt0;
                 Vector3d nveclast = veclast / veclast.Length;
 
-                Vector3d nvecb = vec2 / vec2.Length;                                    // calculate projected vectors for hooking types
-                Vector3d nveca = vec1 / vec1.Length;
-                
-                double a1 = Vector3d.Multiply(vec1, nvecb);
-                double b1 = Vector3d.Multiply(vec2, nveca);
-                
-                Vector3d veca1 = a1 * nvecb;
-                Vector3d vecb1 = b1 * nveca;
-
-                Vector3d veca2 = vec1 - veca1;
-                Vector3d vecb2 = vec2 - vecb1;
-
-                Vector3d A1 = veca1;
-                Vector3d A2 = veca2;
-                nA2 = A2 / A2.Length;
-                Vector3d B1 = vecb1;
-                Vector3d B2 = vecb2;
-                nB2 = B2 / B2.Length;
-
                 ProjVector vecproj = new ProjVector(vec1, vec2);
-                Vector3d vecp0 = vecp0.n
+                Vector3d vecb2 = vecproj.nB2();
+                veca2 = vecproj.nA2();
 
                 string hook = hooking[syntax[i]];
 
@@ -214,10 +195,10 @@ namespace TrajectoryCalculation
                 Point3d lpt0 = ipt0 + anchorparam * nveclast;                           
                 checkpts.Add(lpt0);
 
-                Point3d lpt1 = ipt1 + neg * nB2 * anchorparam;
+                Point3d lpt1 = ipt1 + neg * vecb2 * anchorparam;
                 checkpts.Add(lpt1);
 
-                Point3d stpt = pt1 + neg * nB2 * washerparam;
+                Point3d stpt = pt1 + neg * vecb2 * washerparam;
                 checkpts.Add(stpt);
 
                 BezierSpline spline0 = new BezierSpline(endpt, lpt0, vec0/2, -vec0/2);
@@ -228,7 +209,7 @@ namespace TrajectoryCalculation
                 List<Point3d> sp1 = spline1.BezierSplinePoints();
                 pathpts.AddRange(sp1);
         
-                endpt = pt1 + neg * nA2 * washerparam + nanchorvecs[i] * 0.3 * anchorparam * h;
+                endpt = pt1 + neg * veca2 * washerparam + nanchorvecs[i] * 0.3 * anchorparam * h;
                 checkpts.Add(endpt);
 
                 Arc arc1 = new Arc(stpt, - vec1, endpt);                                  // arc segment
@@ -238,7 +219,7 @@ namespace TrajectoryCalculation
             Point3d anchorpt2 = anchorpts[syntax[syntax.Count - 1]];
 
             checkpts.Add(ipt2);
-            Point3d lpt2 = ipt2 + neg * nA2 * anchorparam;
+            Point3d lpt2 = ipt2 + neg * veca2 * anchorparam;
             checkpts.Add(lpt2);
             Sphere sphere2 = new Sphere(anchorpt2, sphereparam);
             sph2 = Brep.CreateFromSphere(sphere2);
@@ -265,11 +246,11 @@ namespace TrajectoryCalculation
                 h = 0;
             }
             
-            Point3d lpt3 = ipt3 + neg * nA2 * anchorparam;
+            Point3d lpt3 = ipt3 + neg * veca2 * anchorparam;
             checkpts.Add(lpt3);
 
             Point3d pt2 = anchorpt2;
-            Point3d lastpoint = pt2 + neg * nA2 * washerparam;
+            Point3d lastpoint = pt2 + neg * veca2 * washerparam;
             checkpts.Add(lastpoint);
 
             Vector3d vec3 = ipt3 - pt2;
