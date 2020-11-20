@@ -99,6 +99,7 @@ namespace TrajectoryCalculation
             Vector3d nA2 = new Vector3d();
             Vector3d nB2 = new Vector3d();
             Point3d ipt2 = new Point3d();
+            Vector3d vec2 = new Vector3d();
             Curve polyline1 = polylines[0];
             List<Arc> arc = new List<Arc>();
             Brep sph2 = new Brep();
@@ -164,7 +165,7 @@ namespace TrajectoryCalculation
                 Vector3d nvec0 = vec0 / vec0.Length;
                 Vector3d vec1 = ipt1 - pt1;                                          
                 Vector3d nvec1 = vec1 / vec1.Length;
-                Vector3d vec2 = ipt2 - pt1;                                         
+                vec2 = ipt2 - pt1;                                         
                 Vector3d nvec2 = vec2 / vec2.Length;
 
                 Vector3d veclast = endpt - pt0;
@@ -219,7 +220,11 @@ namespace TrajectoryCalculation
                 BezierSpline spline0 = new BezierSpline(endpt, lpt0, vec0/2, -vec0/2);
                 List<Point3d> sp0 = spline0.BezierSplinePoints();
                 pathpts.AddRange(sp0);
-                
+
+                BezierSpline spline1 = new BezierSpline(lpt1, stpt, -vec1 / 2, vec1 / 2);
+                List<Point3d> sp1 = spline1.BezierSplinePoints();
+                pathpts.AddRange(sp1);
+        
                 endpt = pt1 + neg * nA2 * washerparam + nanchorvecs[i] * 0.3 * anchorparam * h;
                 checkpts.Add(endpt);
 
@@ -263,6 +268,17 @@ namespace TrajectoryCalculation
             Point3d pt2 = anchorpt2;
             Point3d lastpoint = pt2 + neg * nA2 * washerparam;
             checkpts.Add(lastpoint);
+
+            Vector3d vec3 = ipt3 - pt2;
+
+
+            BezierSpline spline2 = new BezierSpline(endpt, lpt2, vec2 / 2, -vec2 / 2);
+            List<Point3d> sp2 = spline2.BezierSplinePoints();
+            pathpts.AddRange(sp2);
+
+            BezierSpline spline3 = new BezierSpline(lpt3, lastpoint, -vec3 / 2, vec3 / 2);
+            List<Point3d> sp3 = spline3.BezierSplinePoints();
+            pathpts.AddRange(sp3);
             // code
 
             // set output parameter
