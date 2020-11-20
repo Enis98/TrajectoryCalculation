@@ -59,6 +59,7 @@
     <Compile Include="AnchorGeometry.cs" />
     <Compile Include="BezierSpline.cs" />
     <Compile Include="GhcTrajectoryCalculation.cs" />
+    <Compile Include="ProjVector.cs" />
     <Compile Include="WrapCircle.cs" />
     <Compile Include="GhcAnchor.cs" />
     <Compile Include="TrajectoryCalculationInfo.cs" />

@@ -190,6 +190,9 @@ namespace TrajectoryCalculation
                 Vector3d B2 = vecb2;
                 nB2 = B2 / B2.Length;
 
+                ProjVector vecproj = new ProjVector(vec1, vec2);
+                Vector3d vecp0 = vecp0.n
+
                 string hook = hooking[syntax[i]];
 
                 if(hook == "Y")
