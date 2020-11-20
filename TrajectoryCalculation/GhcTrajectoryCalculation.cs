@@ -106,14 +106,13 @@ namespace TrajectoryCalculation
 
 
             // code: first anchor separately calculated
-
             Point3d anchorpt0 = anchorpts[syntax[0]];
             Point3d anchorpt1 = anchorpts[syntax[1]];
 
             Vector3d vec0 = anchorpt1 - anchorpt0;
-            Vector3d nlinevec0 = vec0 / vec0.Length;                                // norm
+            Vector3d nlinevec0 = vec0 / vec0.Length;                                    // norm
             Vector3d nanchorvec0 = nanchorvecs[syntax[0]];
-            Vector3d crossvec0 = Vector3d.CrossProduct(nanchorvec0, nlinevec0);     // right hand system
+            Vector3d crossvec0 = Vector3d.CrossProduct(nanchorvec0, nlinevec0);         // right hand system
             
             Point3d arcminpt0 = new Point3d(anchorpt0 - crossvec0 * washerparam);
             Point3d arcmaxpt0 = new Point3d(anchorpt0 + crossvec0 * washerparam);
@@ -159,8 +158,7 @@ namespace TrajectoryCalculation
                 Intersection.CurveBrep(polyline1, sph1, 0, out curve1, out ipt);
                 ipt2 = ipt[0];
 
-
-                vec0 = ipt0 - pt0;   // vectors between intersection points and anchorpoints
+                vec0 = ipt0 - pt0;                                          // vectors between intersection points and anchorpoints
                 Vector3d nvec0 = vec0 / vec0.Length;
                 Vector3d vec1 = ipt1 - pt1;                                          
                 Vector3d nvec1 = vec1 / vec1.Length;
@@ -190,7 +188,7 @@ namespace TrajectoryCalculation
                 {
                     neg = -1;
                     h = 0;
-                }                                                                       // Generierung der Kurven ab hier -> Unterteilung in Pfadpunkte
+                }                                                                       // generation of curves
                                                                                         // Vektoren + Zeiten
                 Point3d lpt0 = ipt0 + anchorparam * nveclast;                           
                 checkpts.Add(lpt0);
@@ -254,7 +252,6 @@ namespace TrajectoryCalculation
             checkpts.Add(lastpoint);
 
             Vector3d vec3 = ipt3 - pt2;
-
 
             BezierSpline spline2 = new BezierSpline(endpt, lpt2, vec2 / 2, -vec2 / 2);
             List<Point3d> sp2 = spline2.BezierSplinePoints();
